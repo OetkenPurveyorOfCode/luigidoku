@@ -1,6 +1,6 @@
 # Luigidoku
 
-A sudoku solver
+A sudoku solver made with https://github.com/nakst/luigi
 
 ![](./doc/sudoku.png)
 
