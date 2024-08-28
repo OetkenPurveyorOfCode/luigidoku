@@ -1,3 +1,4 @@
+![example workflow](https://github.com/OetkenPurveyorOfCode/luigidoku/actions/workflows/c-cpp.yml/badge.svg)
 # Luigidoku
 
 A sudoku solver made with https://github.com/nakst/luigi
