@@ -2,6 +2,8 @@
 
 A sudoku solver
 
+![](./doc/sudoku.png)
+
 ## Building
 
 Linux / Windows:
