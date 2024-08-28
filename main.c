@@ -58,7 +58,7 @@ int ButtonMessage(UIElement *element, UIMessage message, int di, void *dp) {
             for (int row = 0; row < 9; row++) {
                 for (int col = 0; col < 9; col++) {
                     assert(textboxes->elements[row][col]->bytes >= 0);
-                    char chr = grid[row+9*col] + '0';
+                    char chr = (char)grid[row+9*col] + '0';
                     UITextboxClear(textboxes->elements[row][col], 1);
                     UITextboxReplace(textboxes->elements[row][col], &chr, 1, 1);
                 }
