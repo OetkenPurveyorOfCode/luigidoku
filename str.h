@@ -140,6 +140,49 @@ typedef enum {
     PARSE_INT_ERR_EMPTY_STRING,
 } ParseIntError;
 
+#if TEST || !__has_builtin(__builtin_mul_overflow) 
+bool sv_i64_i64_mul_overflow(int64_t a, int64_t b, int64_t* c) {
+    if (a == 0 || b == 0) {
+        *c = 0;
+        return false;
+    }
+    else if (a > 0) {
+        if (b > 0) {
+            if (a > INT64_MAX / b) {return true;}
+        }
+        else {
+            if (b < INT64_MIN / a) {return true;}
+        }
+    }
+    else {
+        if (b > 0) {
+            if (a < INT64_MIN / b) {return true;}
+        }
+        else {
+            if (b < INT64_MAX / a) {return true;}
+        }
+    }
+    *c = a * b;
+    return false;
+}
+#else 
+#define sv_i64_i64_mul_overflow __builtin_mul_overflow
+#endif
+
+#if TEST || !__has_builtin(__builtin_add_overflow) 
+bool sv_i64_i64_add_overflow(int64_t a, int64_t b, int64_t* c) {
+    if ((b > 0 && a > INT64_MAX - b) || (b < 0 && a < INT64_MIN - b)) {
+        return true;
+    }
+    else {
+        *c = a + b;
+        return false;
+    }
+}
+#else 
+#define sv_i64_i64_add_overflow __builtin_add_overflow
+#endif
+
 typedef struct {
     int64_t val; // also index in case of err
     ParseIntError err;
@@ -161,13 +204,13 @@ ParseIntResult sv_parse_int(sv stringview) {
         }
         else {
             if ('0' <= stringview.data[i] && stringview.data[i] <= '9') {
-                if (__builtin_mul_overflow(result, 10, &result)) {
+                if (sv_i64_i64_mul_overflow(result, 10, &result)) {
                     return (ParseIntResult){
                         .err = PARSE_INT_ERR_OVERFLOW,
                         .val = (int64_t)i,
                     };
                 }
-                if (__builtin_add_overflow(result, stringview.data[i] - '0', &result)) {
+                if (sv_i64_i64_add_overflow(result, stringview.data[i] - '0', &result)) {
                     return (ParseIntResult){
                         .err = PARSE_INT_ERR_OVERFLOW,
                         .val = (int64_t)i,
@@ -182,7 +225,7 @@ ParseIntResult sv_parse_int(sv stringview) {
             }
         }
     }
-    if (__builtin_mul_overflow(result, sign, &result)) {
+    if (sv_i64_i64_mul_overflow(result, sign, &result)) {
         return (ParseIntResult){
             .err = PARSE_INT_ERR_OVERFLOW,
             .val = (int64_t)stringview.len,
@@ -196,24 +239,62 @@ ParseIntResult sv_parse_int(sv stringview) {
     }
 }
 
-inline int __cdecl printf(const char *const _Format, ...);
-
-void print_sv(sv stringview) {
-    printf("%.*s", (int)stringview.len, stringview.data);
-}
-
 #if TEST 
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <time.h>
+
 #define assert_eq_int(a, b) assert_eq_int_impl(__FILE__, __LINE__, (a) == (b), a, b)
 
 void assert_eq_int_impl(const char* file, int line, bool cond, int64_t a, int64_t b) {
     if (!cond) {
         fprintf(stderr, "%s:line %d: Assertion failed: %" PRIi64 " == %" PRIi64 "\n", file, line, a, b);
         exit(-1);
+    }
+}
+#include "xoshiro256plusplus.c"
+
+void test_sv_intrinsics(void) {
+    srand((unsigned int)time(NULL));
+    s[0] = (uint64_t)rand();
+    s[1] = (uint64_t)rand();
+    s[2] = (uint64_t)rand();
+    s[3] = (uint64_t)rand();
+    for (int64_t i = 0; i < 100000000; i++) {
+        int64_t a = (int64_t)next();
+        int64_t b = (int64_t)next();
+
+        //printf("a %" PRIi64 ", b %" PRIi64"\n", a, b);
+        //exit(-1);
+        int64_t custom_result = 0;
+        int64_t built_in_result = 0;
+        bool custom = (sv_i64_i64_mul_overflow)(a, b, &custom_result);
+        bool built_in = __builtin_mul_overflow(a, b, &built_in_result);
+        assert_eq_int(custom, built_in);
+        if (custom == false && custom_result != built_in_result) {
+            fprintf(stderr, "Failed: %" PRIi64 " == %" PRIi64 " == %" PRIi64 " * %" PRIi64 " \n", built_in_result, custom_result, a, b);
+            exit(-1);
+        }
+    }
+
+    for (int64_t i = 0; i < 100000000; i++) {
+        int64_t a = (int64_t)next();
+        int64_t b = (int64_t)next();
+
+        //printf("a %" PRIi64 ", b %" PRIi64"\n", a, b);
+        //exit(-1);
+        int64_t custom_result = 0;
+        int64_t built_in_result = 0;
+        bool custom = (sv_i64_i64_add_overflow)(a, b, &custom_result);
+        bool built_in = __builtin_add_overflow(a, b, &built_in_result);
+        assert_eq_int(custom, built_in);
+        if (custom == false && custom_result != built_in_result) {
+            fprintf(stderr, "Failed: %" PRIi64 " == %" PRIi64 " == %" PRIi64 " + %" PRIi64 " \n", built_in_result, custom_result, a, b);
+            exit(-1);
+        }
     }
 }
 
@@ -322,6 +403,7 @@ void test_sv_trim_in_place() {
 int main() {
     test_sv_trim_in_place();
     test_sv_parse_int();
+    test_sv_intrinsics();
     printf("All tests passed\n");
     return 0;
 }
