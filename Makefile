@@ -26,7 +26,7 @@ luigi.o: luigi.c
 
 
 test: str.h
-	clang -Wall -Wextra -Wconversion -Wshadow -fsanitize=address,undefined -x c str.h -DTEST -o str_test.exe
+	clang -Wall -Wextra -Wconversion -Wshadow -fsanitize=address,undefined -x c str.h -DTEST -O3 -o str_test.exe
 	str_test.exe
 
 clean:
