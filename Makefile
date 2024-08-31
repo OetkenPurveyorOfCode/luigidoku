@@ -13,6 +13,7 @@ ifeq ($(RELEASE), 1)
 CFLAGS = $(DEFINES) -Wall -Wextra -Wno-unused -Wshadow -Wconversion -O2
 else
 CFLAGS = $(DEFINES) -Wall -Wextra -Wno-unused -Wshadow -Wconversion -fsanitize=address,undefined,integer
+LUIGICFLAGS= $(DEFINES) -Wall -Wextra -Wno-unused-parameter -Wshadow  -fsanitize=address,undefined,integer
 endif
 
 $(TARGETNAME): main.o luigi.o
@@ -22,10 +23,10 @@ main.o: main.c str.h
 	clang -c $(CFLAGS) main.c -o main.o
 
 luigi.o: luigi.c 
-	clang -c $(DEFINES) luigi.c -o luigi.o
+	clang -c $(DEFINES) $(LUIGICFLAGS) luigi.c -o luigi.o
 
 
-test: str.h
+test_str: str.h xoshiro256plusplus.h
 	clang -Wall -Wextra -Wconversion -Wshadow -fsanitize=address,undefined -x c str.h -DTEST -O3 -o str_test.exe
 	str_test.exe
 

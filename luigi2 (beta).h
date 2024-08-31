@@ -397,20 +397,20 @@ extern const int UI_KEYCODE_0;
 #define UI_ELEMENT_FILL (UI_ELEMENT_V_FILL | UI_ELEMENT_H_FILL)
 
 typedef struct UIElement {
-#define UI_ELEMENT_V_FILL (1 << 16)
-#define UI_ELEMENT_H_FILL (1 << 17)
-#define UI_ELEMENT_WINDOW (1 << 18)
-#define UI_ELEMENT_PARENT_PUSH (1 << 19)
-#define UI_ELEMENT_TAB_STOP (1 << 20)
-#define UI_ELEMENT_NON_CLIENT (1 << 21) // Don't destroy in UIElementDestroyDescendents, like scroll bars.
-#define UI_ELEMENT_DISABLED (1 << 22) // Don't receive input events.
-#define UI_ELEMENT_BORDER (1 << 23)
+#define UI_ELEMENT_V_FILL (1U << 16)
+#define UI_ELEMENT_H_FILL (1U << 17)
+#define UI_ELEMENT_WINDOW (1U << 18)
+#define UI_ELEMENT_PARENT_PUSH (1U << 19)
+#define UI_ELEMENT_TAB_STOP (1U << 20)
+#define UI_ELEMENT_NON_CLIENT (1U << 21) // Don't destroy in UIElementDestroyDescendents, like scroll bars.
+#define UI_ELEMENT_DISABLED (1U << 22) // Don't receive input events.
+#define UI_ELEMENT_BORDER (1U << 23)
 
-#define UI_ELEMENT_HIDE (1 << 27)
-#define UI_ELEMENT_RELAYOUT (1 << 28)
-#define UI_ELEMENT_RELAYOUT_DESCENDENT (1 << 29)
-#define UI_ELEMENT_DESTROY (1 << 30)
-#define UI_ELEMENT_DESTROY_DESCENDENT (1 << 31)
+#define UI_ELEMENT_HIDE (1U << 27)
+#define UI_ELEMENT_RELAYOUT (1U << 28)
+#define UI_ELEMENT_RELAYOUT_DESCENDENT (1U << 29)
+#define UI_ELEMENT_DESTROY (1U << 30)
+#define UI_ELEMENT_DESTROY_DESCENDENT (1U << 31)
 
 	uint32_t flags; // First 16 bits are element specific.
 	uint32_t id;
@@ -990,7 +990,7 @@ UIRectangle UIRectangleFit(UIRectangle parent, UIRectangle child, bool allowScal
 		return UIRectangleCenter(parent, child);
 	}
 
-	float childAspectRatio = (float) childWidth / childHeight;
+	float childAspectRatio = (float) childWidth / (float)childHeight;
 	int childMaximumWidth = parentHeight * childAspectRatio;
 	int childMaximumHeight = parentWidth / childAspectRatio;
 
@@ -3195,7 +3195,6 @@ int _UITextboxMessage(UIElement *element, UIMessage message, int di, void *dp) {
 		bool focused = element->window->focused == element;
 
 		if (UI_RECT_VALID(painter->clip)) {
-			int width = UIMeasureStringWidth(textbox->string, textbox->bytes);
 			int height = UIMeasureStringHeight();
 			int x = textBounds.l;
 			int y = (textBounds.t + textBounds.b - height) / 2;

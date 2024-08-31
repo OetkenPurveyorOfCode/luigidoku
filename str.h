@@ -3,7 +3,12 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+
+#ifndef SV_ASSERT 
 #include <assert.h>
+#define SV_ASSERT assert
+#endif
+
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint64_t u64;
@@ -15,8 +20,6 @@ typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
 typedef ptrdiff_t isize;
-
-
 
 #define SV(literal) ((sv){.data=("" literal), .len=sizeof(literal)-1})
 #define SV_U64(number) sv_from_u64(number, (char[65]){0})
@@ -39,7 +42,7 @@ void print_sv(sv stringview);
 //////////////////////////////////////////////////
 #ifndef NO_IMPLEMENTATION
 sv sv_from_parts(const char* data, size_t len) {
-    assert(data);
+    SV_ASSERT(data);
     return (sv){
         .data=data,
         .len=len,
@@ -79,7 +82,7 @@ usize fmt_u64(u64 num, char* buffer) {
         num /= 10;
         pos -= 1;
     }
-    assert(pos == 0);
+    SV_ASSERT(pos == 0);
     buffer[0] = (char)num + '0';
     return num_digits;
 }
@@ -97,7 +100,7 @@ usize fmt_u64_binary(u64 num, char* buffer) {
         num /= 2;
         pos -= 1;
     }
-    assert(pos == 0);
+    SV_ASSERT(pos == 0);
     buffer[0] = (char)num + '0';
     return num_digits;
 }
@@ -255,7 +258,7 @@ void assert_eq_int_impl(const char* file, int line, bool cond, int64_t a, int64_
         exit(-1);
     }
 }
-#include "xoshiro256plusplus.c"
+#include "xoshiro256plusplus.h"
 
 void test_sv_intrinsics(void) {
     srand((unsigned int)time(NULL));
